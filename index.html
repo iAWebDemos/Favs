@@ -56,8 +56,56 @@
     }
 
     header {
+      position: relative;
       text-align: center;
       margin-bottom: 28px;
+    }
+
+    .gear {
+      position: absolute;
+      top: -6px;
+      right: 0;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0.45;
+    }
+
+    .server-panel {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .server-panel.show {
+      display: grid;
+    }
+
+    .server-btn {
+      display: block;
+      padding: 14px;
+      border-radius: 18px;
+      border: none;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .server-btn.on {
+      background: #1f9d55;
+    }
+
+    .server-btn.off {
+      background: #c0392b;
     }
 
     .logo {
@@ -299,6 +347,7 @@
 <body>
   <div class="container">
     <header>
+      <button class="gear" id="gear" aria-label="Ajustes">⚙️</button>
       <div class="logo">⭐</div>
       <h1>Favoritos</h1>
       <p class="subtitle">Tus accesos de uso diario</p>
@@ -365,6 +414,11 @@
     <div class="bot-links">
       <a class="tool-btn" href="https://t.me/RslcmFenixBot?start=normas" target="_blank" rel="noopener noreferrer">📜 Normas</a>
       <a class="tool-btn" href="https://t.me/RslcmFenixBot?start=tutoriales" target="_blank" rel="noopener noreferrer">📲 Tutoriales</a>
+    </div>
+
+    <div class="server-panel" id="serverPanel">
+      <a class="server-btn on" href="https://t.me/RslcmFenixBot?start=srv_on" target="_blank" rel="noopener noreferrer">SERVER ON</a>
+      <a class="server-btn off" href="https://t.me/RslcmFenixBot?start=srv_off" target="_blank" rel="noopener noreferrer">SERVER OFF</a>
     </div>
 
     <footer>Toca un favorito para abrirlo</footer>
@@ -454,6 +508,10 @@
     });
 
     document.getElementById("close").addEventListener("click", () => dlg.close());
+
+    document.getElementById("gear").addEventListener("click", () => {
+      document.getElementById("serverPanel").classList.toggle("show");
+    });
   </script>
 </body>
 </html>
