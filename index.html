@@ -202,6 +202,19 @@
       cursor: pointer;
     }
 
+    .bot-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .bot-links .tool-btn {
+      margin-top: 0;
+      text-align: center;
+      text-decoration: none;
+    }
+
     dialog {
       width: min(92vw, 420px);
       padding: 20px;
@@ -348,6 +361,11 @@
     </nav>
 
     <button class="tool-btn" id="openDialog">Crear datos de acceso</button>
+
+    <div class="bot-links">
+      <a class="tool-btn" href="https://t.me/RslcmFenixBot?start=normas" target="_blank" rel="noopener noreferrer">📜 Normas</a>
+      <a class="tool-btn" href="https://t.me/RslcmFenixBot?start=tutoriales" target="_blank" rel="noopener noreferrer">📲 Tutoriales</a>
+    </div>
 
     <footer>Toca un favorito para abrirlo</footer>
   </div>
