@@ -98,6 +98,8 @@
       font-weight: 700;
       text-align: center;
       text-decoration: none;
+      font-family: inherit;
+      cursor: pointer;
     }
 
     .server-btn.on {
@@ -106,6 +108,26 @@
 
     .server-btn.off {
       background: #c0392b;
+    }
+
+    .server-panel input {
+      grid-column: 1 / -1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      text-align: center;
+    }
+
+    .server-msg {
+      grid-column: 1 / -1;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+      min-height: 1.2em;
     }
 
     .logo {
@@ -138,36 +160,33 @@
     }
 
     .list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
     .btn {
       position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 14px;
-      padding: 16px;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 8px;
+      min-height: 104px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 16px;
       color: var(--text);
       text-decoration: none;
+      text-align: center;
       overflow: hidden;
       transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
       user-select: none;
     }
 
     .btn::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: linear-gradient(180deg, var(--accent-a), var(--accent-b));
-      opacity: 0.8;
+      display: none;
     }
 
     .btn:hover {
@@ -190,38 +209,33 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
       background: rgba(109, 94, 252, 0.14);
-      font-size: 22px;
+      font-size: 19px;
     }
 
     .info {
-      flex: 1;
       min-width: 0;
+      width: 100%;
     }
 
     .name {
       display: block;
-      font-size: 1.02rem;
+      font-size: 0.86rem;
       font-weight: 600;
-    }
-
-    .host {
-      display: block;
-      margin-top: 3px;
-      font-size: 0.8rem;
-      color: var(--muted);
-      white-space: nowrap;
+      line-height: 1.25;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    .host {
+      display: none;
+    }
+
     .arrow {
-      color: var(--muted);
-      font-size: 1.2rem;
-      transition: transform 0.15s ease, color 0.15s ease;
+      display: none;
     }
 
     .btn:hover .arrow {
@@ -417,8 +431,10 @@
     </div>
 
     <div class="server-panel" id="serverPanel">
-      <a class="server-btn on" href="https://t.me/RslcmFenixBot?start=srv_on" target="_blank" rel="noopener noreferrer">SERVER ON</a>
-      <a class="server-btn off" href="https://t.me/RslcmFenixBot?start=srv_off" target="_blank" rel="noopener noreferrer">SERVER OFF</a>
+      <button class="server-btn on" data-action="on">SERVER ON</button>
+      <button class="server-btn off" data-action="off">SERVER OFF</button>
+      <input class="pin" id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN de administrador">
+      <p class="server-msg" id="serverMsg"></p>
     </div>
 
     <footer>Toca un favorito para abrirlo</footer>
@@ -511,6 +527,36 @@
 
     document.getElementById("gear").addEventListener("click", () => {
       document.getElementById("serverPanel").classList.toggle("show");
+    });
+
+    const ENDPOINT = "https://TU-DOMINIO.up.railway.app/server";
+    const pinInput = document.getElementById("pin");
+    const serverMsg = document.getElementById("serverMsg");
+    pinInput.value = localStorage.getItem("fenixPin") || "";
+
+    async function sendStatus(action) {
+      const pin = pinInput.value.trim();
+      if (!pin) {
+        serverMsg.textContent = "Escribe el PIN.";
+        return;
+      }
+      localStorage.setItem("fenixPin", pin);
+      serverMsg.textContent = "Enviando...";
+      try {
+        const r = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, pin })
+        });
+        const data = await r.json().catch(() => ({}));
+        serverMsg.textContent = r.ok ? "✅ Enviado al grupo" : (data.error || "Error");
+      } catch {
+        serverMsg.textContent = "⚠️ No se pudo conectar";
+      }
+    }
+
+    document.querySelectorAll(".server-btn").forEach((b) => {
+      b.addEventListener("click", () => sendStatus(b.dataset.action));
     });
   </script>
 </body>
