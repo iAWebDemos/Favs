@@ -385,8 +385,14 @@
       let user = p.get("username") || p.get("user") || p.get("usuario");
       let pass = p.get("password") || p.get("pass") || p.get("contraseña") || p.get("contrasena");
       if (!user || !pass) {
-        const parts = url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
-        if (parts.length >= 2) {
+        const parts = url.pathname.split("/").filter(Boolean).map((s) => {
+          try { return decodeURIComponent(s); } catch { return s; }
+        });
+        const i = parts.indexOf("playlist");
+        if (i !== -1 && parts.length >= i + 3) {
+          user = user || parts[i + 1];
+          pass = pass || parts[i + 2];
+        } else if (parts.length >= 2) {
           user = user || parts[parts.length - 2];
           pass = pass || parts[parts.length - 1];
         }
@@ -412,7 +418,7 @@
         return;
       }
       error.style.display = "none";
-      result = "Entra al grupo, lee la info del anclado y haz el tutorial correspondiente:\n\nDatos de acceso:\nUsuario: " + data.user + "\nPassword: " + data.pass;
+      result = "Datos de acceso:\nUsuario: " + data.user + "\nPassword: " + data.pass + "\n\nEntra al grupo, lee la info del anclado y haz el tutorial correspondiente: ";
       out.textContent = result;
       out.style.display = "block";
       copyBtn.style.display = "block";
