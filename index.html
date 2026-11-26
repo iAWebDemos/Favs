@@ -187,6 +187,100 @@
       font-size: 0.75rem;
       color: #4a5366;
     }
+    .tool-btn {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    dialog {
+      width: min(92vw, 420px);
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    dialog h2 {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+
+    dialog label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    dialog input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .out {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      white-space: pre-line;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 0.9rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .row button {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card-hover);
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .row button.primary {
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      border: none;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      color: #ff6b6b;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
@@ -253,7 +347,89 @@
       </a>
     </nav>
 
+    <button class="tool-btn" id="openDialog">Crear datos de acceso</button>
+
     <footer>Toca un favorito para abrirlo</footer>
   </div>
+  <dialog id="dlg">
+    <h2>Crear datos de acceso</h2>
+    <label for="urlInput">Pega la URL</label>
+    <input id="urlInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://...">
+    <p class="error" id="error">No he podido leer usuario y contraseña de esa URL.</p>
+    <div class="out" id="out"></div>
+    <div class="row">
+      <button type="button" class="primary" id="create">Crear</button>
+      <button type="button" id="copy" style="display:none">Copiar</button>
+      <button type="button" id="close">Cerrar</button>
+    </div>
+  </dialog>
+
+  <script>
+    const dlg = document.getElementById("dlg");
+    const urlInput = document.getElementById("urlInput");
+    const out = document.getElementById("out");
+    const error = document.getElementById("error");
+    const copyBtn = document.getElementById("copy");
+    let result = "";
+
+    function parseCredentials(raw) {
+      let text = raw.trim();
+      if (!/^https?:\/\//i.test(text)) text = "http://" + text;
+      let url;
+      try {
+        url = new URL(text);
+      } catch {
+        return null;
+      }
+      const p = url.searchParams;
+      let user = p.get("username") || p.get("user") || p.get("usuario");
+      let pass = p.get("password") || p.get("pass") || p.get("contraseña") || p.get("contrasena");
+      if (!user || !pass) {
+        const parts = url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+        if (parts.length >= 2) {
+          user = user || parts[parts.length - 2];
+          pass = pass || parts[parts.length - 1];
+        }
+      }
+      return user && pass ? { user, pass } : null;
+    }
+
+    document.getElementById("openDialog").addEventListener("click", () => {
+      urlInput.value = "";
+      out.style.display = "none";
+      copyBtn.style.display = "none";
+      error.style.display = "none";
+      dlg.showModal();
+      urlInput.focus();
+    });
+
+    document.getElementById("create").addEventListener("click", () => {
+      const data = parseCredentials(urlInput.value);
+      if (!data) {
+        error.style.display = "block";
+        out.style.display = "none";
+        copyBtn.style.display = "none";
+        return;
+      }
+      error.style.display = "none";
+      result = "Datos de acceso:\nUsuario: " + data.user + "\nPassword: " + data.pass;
+      out.textContent = result;
+      out.style.display = "block";
+      copyBtn.style.display = "block";
+      urlInput.value = "";
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(result);
+        copyBtn.textContent = "Copiado";
+      } catch {
+        copyBtn.textContent = "No se pudo copiar";
+      }
+      setTimeout(() => (copyBtn.textContent = "Copiar"), 1500);
+    });
+
+    document.getElementById("close").addEventListener("click", () => dlg.close());
+  </script>
 </body>
 </html>
