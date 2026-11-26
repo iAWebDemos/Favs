@@ -61,31 +61,11 @@
       margin-bottom: 28px;
     }
 
-    .gear {
-      position: absolute;
-      top: -6px;
-      right: 0;
-      width: 34px;
-      height: 34px;
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      background: var(--card);
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1;
-      cursor: pointer;
-      opacity: 0.45;
-    }
-
     .server-panel {
-      display: none;
+      display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-top: 12px;
-    }
-
-    .server-panel.show {
-      display: grid;
     }
 
     .server-btn {
@@ -110,16 +90,14 @@
       background: #c0392b;
     }
 
-    .server-panel input {
-      grid-column: 1 / -1;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--bg);
-      color: var(--text);
+    .server-btn:active {
+      transform: scale(0.97);
+    }
+
+    .confirm-text {
       font-size: 0.95rem;
-      font-family: inherit;
-      text-align: center;
+      color: var(--muted);
+      line-height: 1.45;
     }
 
     .server-msg {
@@ -265,16 +243,7 @@
     }
 
     .bot-links {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .bot-links .tool-btn {
-      margin-top: 0;
-      text-align: center;
-      text-decoration: none;
+      display: none;
     }
 
     dialog {
@@ -361,7 +330,6 @@
 <body>
   <div class="container">
     <header>
-      <button class="gear" id="gear" aria-label="Ajustes">⚙️</button>
       <div class="logo">⭐</div>
       <h1>Favoritos</h1>
       <p class="subtitle">Tus accesos de uso diario</p>
@@ -425,15 +393,9 @@
 
     <button class="tool-btn" id="openDialog">Crear datos de acceso</button>
 
-    <div class="bot-links">
-      <a class="tool-btn" href="https://t.me/RslcmFenixBot?start=normas" target="_blank" rel="noopener noreferrer">📜 Normas</a>
-      <a class="tool-btn" href="https://t.me/RslcmFenixBot?start=tutoriales" target="_blank" rel="noopener noreferrer">📲 Tutoriales</a>
-    </div>
-
-    <div class="server-panel" id="serverPanel">
+    <div class="server-panel">
       <button class="server-btn on" data-action="on">SERVER ON</button>
       <button class="server-btn off" data-action="off">SERVER OFF</button>
-      <input class="pin" id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN de administrador">
       <p class="server-msg" id="serverMsg"></p>
     </div>
 
@@ -449,6 +411,15 @@
       <button type="button" class="primary" id="create">Crear</button>
       <button type="button" id="copy" style="display:none">Copiar</button>
       <button type="button" id="close">Cerrar</button>
+    </div>
+  </dialog>
+
+  <dialog id="confirmDlg">
+    <h2 id="confirmTitle">¿Estás seguro?</h2>
+    <p id="confirmText" class="confirm-text"></p>
+    <div class="row">
+      <button type="button" class="primary" id="confirmYes">Sí, enviar</button>
+      <button type="button" id="confirmNo">Cancelar</button>
     </div>
   </dialog>
 
@@ -525,28 +496,19 @@
 
     document.getElementById("close").addEventListener("click", () => dlg.close());
 
-    document.getElementById("gear").addEventListener("click", () => {
-      document.getElementById("serverPanel").classList.toggle("show");
-    });
-
     const ENDPOINT = "https://TU-DOMINIO.up.railway.app/server";
-    const pinInput = document.getElementById("pin");
     const serverMsg = document.getElementById("serverMsg");
-    pinInput.value = localStorage.getItem("fenixPin") || "";
+    const confirmDlg = document.getElementById("confirmDlg");
+    const confirmText = document.getElementById("confirmText");
+    let pendingAction = null;
 
     async function sendStatus(action) {
-      const pin = pinInput.value.trim();
-      if (!pin) {
-        serverMsg.textContent = "Escribe el PIN.";
-        return;
-      }
-      localStorage.setItem("fenixPin", pin);
       serverMsg.textContent = "Enviando...";
       try {
         const r = await fetch(ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, pin })
+          body: JSON.stringify({ action })
         });
         const data = await r.json().catch(() => ({}));
         serverMsg.textContent = r.ok ? "✅ Enviado al grupo" : (data.error || "Error");
@@ -556,7 +518,23 @@
     }
 
     document.querySelectorAll(".server-btn").forEach((b) => {
-      b.addEventListener("click", () => sendStatus(b.dataset.action));
+      b.addEventListener("click", () => {
+        pendingAction = b.dataset.action;
+        confirmText.textContent = pendingAction === "on"
+          ? "Se enviará al grupo el mensaje: SERVER ON"
+          : "Se enviará al grupo el mensaje: SERVER OFF";
+        confirmDlg.showModal();
+      });
+    });
+
+    document.getElementById("confirmYes").addEventListener("click", () => {
+      confirmDlg.close();
+      sendStatus(pendingAction);
+    });
+
+    document.getElementById("confirmNo").addEventListener("click", () => {
+      confirmDlg.close();
+      serverMsg.textContent = "";
     });
   </script>
 </body>
